@@ -16,8 +16,8 @@ COPY src ./src
 # Build the project
 ARG TARGETPLATFORM
 RUN case "$TARGETPLATFORM" in \
-  "linux/amd64")   rustup target add x86_64-unknown-linux-musl ;; \
-  "linux/arm64")   rustup target add aarch64-unknown-linux-musl ;; \
+  "linux/arm64") rustup target add aarch64-unknown-linux-gnu ;; \
+  "linux/amd64") rustup target add x86_64-unknown-linux-musl ;; \
   "linux/arm/v7")  rustup target add armv7-unknown-linux-musleabihf ;; \
   esac && \
   cargo build --release --target $(rustc -Vv | grep 'host:' | awk '{print $2}')
