@@ -1,6 +1,8 @@
 # Stage 1: Builder
 FROM rust:latest AS builder
 
+ENV CROSS_CONTAINER_IN_CONTAINER=true
+
 # Install common dependencies
 RUN apt-get update && \
   apt-get install -y \
@@ -18,7 +20,6 @@ WORKDIR /app
 # Copy the project files
 COPY . .
 
-ENV CROSS_CONTAINER_IN_CONTAINER=true
 
 # Set environment variables for OpenSSL
 ENV OPENSSL_DIR=/usr/lib/ssl
