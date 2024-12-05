@@ -292,7 +292,7 @@ impl Authenticator {
         let payload =
             PromptPayload::new(
                 String::from("fr.freebox.prometheus.exporter"),
-                String::from("Prometheus Exporter"),
+                String::from("Freebox Prometheus Exporter"),
                 String::from("1.0.0.0"),
                 String::from("todo")
             );
