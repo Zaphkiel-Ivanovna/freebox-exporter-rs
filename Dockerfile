@@ -1,60 +1,52 @@
-# Étape de base pour installer cargo-chef
 FROM ekidd/rust-musl-builder:latest AS chef
 ADD --chown=rust:rust . ./
 RUN cargo install cargo-chef
 
-# Étape de planification pour amd64
 FROM --platform=linux/amd64 chef AS planner-amd64
 WORKDIR /app
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo-chef prepare --recipe-path recipe.json
 
-# Étape de planification pour arm64
 FROM --platform=linux/arm64 chef AS planner-arm64
 WORKDIR /app
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo-chef prepare --recipe-path recipe.json
 
-# Étape de planification pour arm/v7
 FROM --platform=linux/arm/v7 chef AS planner-armv7
 WORKDIR /app
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo-chef prepare --recipe-path recipe.json
 
-# Étape de construction pour amd64
 FROM --platform=linux/amd64 rust:latest AS builder-amd64
 RUN apt-get update && \
     apt-get install -y musl-tools libssl-dev pkg-config && \
     rustup target add x86_64-unknown-linux-musl
 WORKDIR /app
 COPY --from=planner-amd64 /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo-chef cook --release --recipe-path recipe.json
 COPY . .
 RUN CC=musl-gcc cargo build --release --target x86_64-unknown-linux-musl
 
-# Étape de construction pour arm64
 FROM --platform=linux/arm64 rust:latest AS builder-arm64
 RUN apt-get update && \
     apt-get install -y musl-tools libssl-dev pkg-config && \
     rustup target add aarch64-unknown-linux-musl
 WORKDIR /app
 COPY --from=planner-arm64 /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo-chef cook --release --recipe-path recipe.json
 COPY . .
 RUN CC=musl-gcc cargo build --release --target aarch64-unknown-linux-musl
 
-# Étape de construction pour arm/v7
 FROM --platform=linux/arm/v7 rust:latest AS builder-armv7
 RUN apt-get update && \
     apt-get install -y musl-tools libssl-dev pkg-config && \
     rustup target add armv7-unknown-linux-musleabihf
 WORKDIR /app
 COPY --from=planner-armv7 /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo-chef cook --release --recipe-path recipe.json
 COPY . .
 RUN CC=musl-gcc cargo build --release --target armv7-unknown-linux-musleabihf
 
-# Étape finale pour créer l'image multi-plateforme
 FROM alpine:latest
 RUN apk add --no-cache ca-certificates
 WORKDIR /root/
