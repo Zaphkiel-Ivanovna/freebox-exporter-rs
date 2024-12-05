@@ -1,6 +1,4 @@
-FROM ekidd/rust-musl-builder:latest AS chef
-ADD --chown=rust:rust . ./
-RUN cargo install cargo-chef
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 
 FROM --platform=linux/amd64 chef AS planner-amd64
 WORKDIR /app
