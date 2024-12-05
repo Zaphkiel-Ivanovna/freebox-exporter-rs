@@ -1,9 +1,8 @@
-# Stage 1: Builder
-FROM rust:latest AS builder
+# syntax=docker/dockerfile:1.4
+# Étape 1 : Construction du binaire
+FROM --platform=$BUILDPLATFORM rust:latest AS builder
 
-ENV CROSS_CONTAINER_IN_CONTAINER=true
-
-# Install common dependencies
+# Installer les dépendances nécessaires
 RUN apt-get update && \
   apt-get install -y \
   musl-tools \
@@ -11,62 +10,65 @@ RUN apt-get update && \
   pkg-config \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install cross
-RUN cargo install cross
-
-# Set the working directory
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copy the project files
+# Copier les fichiers du projet
 COPY . .
 
-
-# Set environment variables for OpenSSL
+# Définir les variables d'environnement pour OpenSSL
 ENV OPENSSL_DIR=/usr/lib/ssl
 ENV OPENSSL_LIB_DIR=/usr/lib/ssl/lib
 ENV OPENSSL_INCLUDE_DIR=/usr/lib/ssl/include
 ENV PKG_CONFIG_ALLOW_CROSS=1
 
-# Determine the target triple based on the target platform
+# Déterminer le triple cible en fonction de la plateforme cible
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+  --mount=type=cache,target=/app/target \
+  case "$TARGETPLATFORM" in \
+  "linux/amd64") \
+  TARGET_TRIPLE="x86_64-unknown-linux-musl" ;; \
+  "linux/arm64") \
+  TARGET_TRIPLE="aarch64-unknown-linux-musl" ;; \
+  "linux/arm/v7") \
+  TARGET_TRIPLE="armv7-unknown-linux-musleabihf" ;; \
+  *) \
+  echo "Architecture non prise en charge : $TARGETPLATFORM" && exit 1 ;; \
+  esac && \
+  rustup target add $TARGET_TRIPLE && \
+  CC_${TARGET_TRIPLE//-/_}=musl-gcc \
+  CARGO_TARGET_${TARGET_TRIPLE//-/_}_LINKER=musl-gcc \
+  cargo build --release --target $TARGET_TRIPLE
+
+# Étape 2 : Création de l'image finale
+FROM alpine:latest
+
+# Installer les dépendances nécessaires à l'exécution
+RUN apk add --no-cache ca-certificates
+
+# Définir le répertoire de travail
+WORKDIR /root/
+
+# Copier le binaire compilé depuis l'étape de construction
 ARG TARGETPLATFORM
 RUN case "$TARGETPLATFORM" in \
   "linux/amd64") \
-  TARGET_TRIPLE="x86_64-unknown-linux-gnu" ;; \
+  TARGET_TRIPLE="x86_64-unknown-linux-musl" ;; \
   "linux/arm64") \
-  TARGET_TRIPLE="aarch64-unknown-linux-gnu" && \
-  apt-get update && \
-  apt-get install -y gcc-aarch64-linux-gnu && \
-  apt-get clean && rm -rf /var/lib/apt/lists/* ;; \
+  TARGET_TRIPLE="aarch64-unknown-linux-musl" ;; \
   "linux/arm/v7") \
-  TARGET_TRIPLE="armv7-unknown-linux-gnueabihf" && \
-  apt-get update && \
-  apt-get install -y gcc-arm-linux-gnueabihf && \
-  apt-get clean && rm -rf /var/lib/apt/lists/* ;; \
+  TARGET_TRIPLE="armv7-unknown-linux-musleabihf" ;; \
   *) \
-  echo "Unsupported architecture: $TARGETPLATFORM" && exit 1 ;; \
-  esac && \
-  # Add the Rust target
-  rustup target add $TARGET_TRIPLE && \
-  # Build the project for the specified target
-  cross build --release --target $TARGET_TRIPLE
-
-# Stage 2: Runtime
-FROM --platform=$TARGETPLATFORM alpine:latest
-
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates
-
-# Set the working directory
-WORKDIR /root/
-
-# Copy the compiled binary from the builder stage
+  echo "Architecture non prise en charge : $TARGETPLATFORM" && exit 1 ;; \
+  esac
 COPY --from=builder /app/target/$TARGET_TRIPLE/release/freebox-exporter-rs .
 
-# Copy the configuration file
+# Copier le fichier de configuration
 COPY config.toml /etc/freebox-exporter-rs/config.toml
 
-# Expose the port specified in the configuration
+# Exposer le port spécifié dans la configuration
 EXPOSE 9102
 
-# Set the default command to run the executable
+# Définir la commande par défaut pour exécuter l'exécutable
 CMD ["./freebox-exporter-rs"]
