@@ -1,5 +1,7 @@
 name: Build and Publish Docker Images
 
+runs-on: self-hosted
+
 on:
   workflow_dispatch:
 
