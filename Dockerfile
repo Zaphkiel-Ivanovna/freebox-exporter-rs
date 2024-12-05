@@ -18,6 +18,8 @@ WORKDIR /app
 # Copy the project files
 COPY . .
 
+ENV CROSS_CONTAINER_IN_CONTAINER=true
+
 # Set environment variables for OpenSSL
 ENV OPENSSL_DIR=/usr/lib/ssl
 ENV OPENSSL_LIB_DIR=/usr/lib/ssl/lib
