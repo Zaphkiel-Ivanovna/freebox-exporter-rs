@@ -1,44 +1,66 @@
-# Stage 1: Build stage
-FROM --platform=$BUILDPLATFORM rust:alpine AS builder
+# Stage 1: Builder
+FROM --platform=$BUILDPLATFORM rust:latest AS builder
 
-# Install necessary dependencies
-RUN apk add --no-cache musl-dev openssl-dev perl make gcc
+# Install necessary dependencies for cross-compilation
+RUN apt-get update && \
+  apt-get install -y \
+  gcc-aarch64-linux-gnu \
+  gcc-arm-linux-gnueabihf \
+  musl-tools \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set the Current Working Directory inside the container
+# Add Rust targets for cross-compilation
+RUN rustup target add \
+  x86_64-unknown-linux-musl \
+  aarch64-unknown-linux-musl \
+  armv7-unknown-linux-musleabihf
+
+# Set the working directory
 WORKDIR /app
 
-# Copy the Cargo.toml and Cargo.lock files
+# Copy the Cargo manifest files
 COPY Cargo.toml Cargo.lock ./
 
 # Copy the source code
-COPY src ./src
+COPY src/ ./src/
 
-# Build the project
+# Determine the target triple based on the target platform
 ARG TARGETPLATFORM
 RUN case "$TARGETPLATFORM" in \
-  "linux/arm64") rustup target add aarch64-unknown-linux-gnu ;; \
-  "linux/amd64") rustup target add x86_64-unknown-linux-musl ;; \
-  "linux/arm/v7")  rustup target add armv7-unknown-linux-musleabihf ;; \
+  "linux/amd64")   TARGET_TRIPLE="x86_64-unknown-linux-musl" ;; \
+  "linux/arm64")   TARGET_TRIPLE="aarch64-unknown-linux-musl" ;; \
+  "linux/arm/v7")  TARGET_TRIPLE="armv7-unknown-linux-musleabihf" ;; \
+  *) echo "Unsupported architecture: $TARGETPLATFORM" && exit 1 ;; \
   esac && \
-  cargo build --release --target $(rustc -Vv | grep 'host:' | awk '{print $2}')
+  # Build the project for the specified target
+  cargo build --release --target $TARGET_TRIPLE
 
-# Stage 2: Final stage
+# Stage 2: Runtime
 FROM --platform=$TARGETPLATFORM alpine:latest
 
-# Install necessary runtime dependencies
+# Install runtime dependencies
 RUN apk add --no-cache ca-certificates
 
-# Set the Current Working Directory inside the container
+# Set the working directory
 WORKDIR /root/
 
-# Copy the compiled binary from the build stage
-COPY --from=builder /app/target/*/release/freebox-exporter-rs .
+# Determine the target triple based on the target platform
+ARG TARGETPLATFORM
+RUN case "$TARGETPLATFORM" in \
+  "linux/amd64")   TARGET_TRIPLE="x86_64-unknown-linux-musl" ;; \
+  "linux/arm64")   TARGET_TRIPLE="aarch64-unknown-linux-musl" ;; \
+  "linux/arm/v7")  TARGET_TRIPLE="armv7-unknown-linux-musleabihf" ;; \
+  *) echo "Unsupported architecture: $TARGETPLATFORM" && exit 1 ;; \
+  esac
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/target/$TARGET_TRIPLE/release/freebox-exporter-rs .
 
 # Copy the configuration file
 COPY config.toml /etc/freebox-exporter-rs/config.toml
 
-# Expose the port specified in the config.toml
+# Expose the port specified in the configuration
 EXPOSE 9102
 
-# Command to run the executable with the default argument
-CMD ["/root/freebox-exporter-rs"]
+# Set the default command to run the executable
+CMD ["./freebox-exporter-rs"]
