@@ -1,7 +1,5 @@
 name: Build and Publish Docker Images
 
-runs-on: self-hosted
-
 on:
   workflow_dispatch:
 
@@ -11,7 +9,7 @@ permissions:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
