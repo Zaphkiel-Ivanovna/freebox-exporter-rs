@@ -1,5 +1,6 @@
 # Étape de base pour installer cargo-chef
-FROM rust:latest AS chef
+FROM ekidd/rust-musl-builder:latest AS chef
+ADD --chown=rust:rust . ./
 RUN cargo install cargo-chef
 
 # Étape de planification pour amd64
