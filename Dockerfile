@@ -1,6 +1,6 @@
-FROM ekidd/rust-musl-builder:latest AS chef
+FROM clux/muslrust:stable AS chef
 ADD --chown=rust:rust . ./
-RUN cargo install cargo-chef --version 0.1.57 --locked
+RUN cargo install cargo-chef --locked
 
 FROM --platform=linux/amd64 chef AS planner-amd64
 WORKDIR /app
