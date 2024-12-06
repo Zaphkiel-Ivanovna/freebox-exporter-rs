@@ -453,6 +453,7 @@ dependencies = [
  "hmac",
  "log",
  "openssl",
+ "openssl-sys",
  "prometheus_exporter",
  "reqwest",
  "serde",
