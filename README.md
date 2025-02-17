@@ -16,12 +16,13 @@ You will find on Grafana [gallery](https://grafana.com/grafana/dashboards/21957)
 
 ![board-1](./doc/board-1.png)
 ![board-2](./doc/board-2.png)
+![board-3](./doc/board-3.png)
 
 You will find [here](https://grafana.com/grafana/dashboards/21637) the original Grafana board for the exporter, thanks go to [@ottobaer](https://github.com/ottobaer)!
 
 ## Features
 
-* Freebox metrics exposition (WIP)
+* Freebox metrics exposition
 * Metrics caching & background update
 * Customizable data directory
 * Customizable metrics prefix
@@ -30,7 +31,7 @@ You will find [here](https://grafana.com/grafana/dashboards/21637) the original 
 * Customizable/CLI overridable log verbosity
 * CLI overridable configuration file path
 
-## Current API progress
+## API Implementation
 
 * &#10134; Authentication
   * &#9989; Register: **100%**
@@ -46,71 +47,31 @@ You will find [here](https://grafana.com/grafana/dashboards/21637) the original 
   * &#9989; Lan: **100%**
   * &#9989; Lan Browser: **100%**
   * &#10060; Freeplug: 0%
-  * &#10060; DHCP: 0%
-  * &#10060; Ftp: 0%
-  * &#10060; NAT: 0%
-  * &#10060; Port Forwarding: 0%
-  * &#10060; Incoming port configuration: 0%
-  * &#10060; UPnP IGD: 0%
-  * &#10060; LCD: 0%
-  * &#10060; Network Share: 0%
-  * &#10060; UPnP AV: 0%
+  * &#9989; DHCP: **100%**
   * &#9989; Switch: **100%**
-  * &#10060; Wi-Fi: 0%
+  * &#9989; Wi-Fi: **100%**%
   * &#9989; System: **100%**
   * &#10060; VPN Server: 0%
   * &#10060; VPN Client: 0%
 
-* &#10134; Download
-  * &#10060; Stats: 0%
-  * &#10060; Files: 0%
-  * &#10060; Trackers: 0%
-  * &#10060; Peers: 0%
-  * &#10060; Pieces: 0%
-  * &#10060; Blacklist: 0%
-  * &#10060; Feeds: 0%
-  * &#10060; Configuration: 0%
-
-* &#10134; File
-  * &#10060; System: 0%
-  * &#10060; Sharing Link: 0%
-  * &#10060; Upload: 0%
-
-* &#10134; Air Media
-  * &#10060; Configuration: 0%
-  * &#10060; Receivers: 0%
-
-* &#10060; Storage: 0%
-* &#10060; Parental filter: 0%
-* &#10134; PVR
-  * &#10060; Programmed records: 0%
-  * &#10060; Finished records: 0%
-  * &#10060; Storage media: 0%
-
-## Roadmap
-
-* Expose all Freebox API*
-* Speedtest metrics
-* Provide systemd registration
-* Provide container support
-* Publish to crates.io (cargo install)
-
-(*) Which can be used as stats
+## Enhancements
 
 You can suggest your ideas in [discussion section](https://github.com/shackerd/freebox-exporter-rs/discussions/categories/ideas)
 
 ## Usage
 
-This project uses `clap` crate you will find usage by using the following command `freebox-exporter-rs -h`
+You will find usage by using the following command `freebox-exporter-rs -h`
 
 ``` text
 Usage: freebox-exporter-rs [OPTIONS] <COMMAND>
 
 Commands:
-  register
-  serve
+  auto                starts the application and registers it if necessary
+  register            registers the application
+  serve               starts the application
+  session-diagnostic  runs a diagnostic on the session
   revoke
-  help      Print this message or the help of the given subcommand(s)
+  help                Print this message or the help of the given subcommand(s)
 
 Options:
   -c, --configuration-file <CONFIGURATION_FILE>
@@ -120,8 +81,6 @@ Options:
 ```
 
 ## Running project
-
-
 
 Running with docker
 
@@ -142,13 +101,12 @@ services:
     ports:
       - "9102:9102"
     restart: unless-stopped
-    command: ["/root/freebox-exporter-rs", "-c", "/etc/freebox-exporter-rs/config.toml" ,"serve"]
+    command: ["/root/freebox-exporter-rs", "-c", "/etc/freebox-exporter-rs/config.toml" ,"auto"]
 ```
 
 > [!IMPORTANT]
-> * **port** must match with value set in your **configuration file**
-> * `data` volume path must match with `data_directory` value set in your **configuration file**
-> * first time run, you may change the `serve` argument in the compose file to `register` and switch back to `serve` once app is authorized and **app token** has been created in **data** folder
+> **port** must match with value set in your **configuration file**
+> `data` volume path must match with `data_directory` value set in your **configuration file**
 
 ## Configuring
 
@@ -184,20 +142,10 @@ lan = true
 lan_browser = true
 # Exposes switch, this option may not work properly in bridge_mode
 switch = true
-# Exposes settings
-settings = true
-# Exposes contacts
-contacts = true
-# Exposes calls
-calls = true
-# Exposes explorer
-explorer = true
-# Exposes downloader
-downloader = true
-# Exposes parental
-parental = true
-# Exposes pvr
-pvr = true
+# Exposes wifi
+wifi = true
+# Exposes dhcp
+dhcp = true
 # Sets metrics prefix, it cannot be empty
 # Warning if you are using the exporter Grafana board, changing this value will cause the board to be unable to retrieve data if you do not update it
 prefix = "fbx_exporter"
@@ -247,10 +195,7 @@ cargo run register
 
 ### Running tests
 
-> [!TIP]
-> This project uses [Mockoon](https://mockoon.com/) for API mocking, you need to install GUI or CLI and start it with `api-mock.json` file.
-
-Then run the following command.
+Run the following command.
 
 ``` bash
 cargo test
