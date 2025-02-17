@@ -92,22 +92,12 @@ impl Authenticator {
         let client = http_client_factory().unwrap();
         let hostname = hostname::get().unwrap();
 
-<<<<<<< HEAD
-        let payload =
-            PromptPayload::new(
-                String::from("fr.freebox.prometheus.exporter"),
-                String::from("Freebox Prometheus Exporter"),
-                String::from("1.0.0.0"),
-                String::from("todo")
-            );
-=======
         let payload = PromptPayload::new(
             String::from("fr.freebox.prometheus.exporter"),
-            String::from("Prometheus Exporter"),
+            String::from("Freebox Prometheus Exporter"),
             String::from("1.0.0.0"),
             String::from(hostname.to_str().unwrap()),
         );
->>>>>>> 3d338157dede6811fe39e401486f64224eaa3780
 
         let resp = match (match client
             .post(format!("{}v4/login/authorize", self.api_url))
