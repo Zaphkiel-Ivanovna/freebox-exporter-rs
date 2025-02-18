@@ -18,7 +18,7 @@ RUN rustup target add x86_64-unknown-linux-musl --toolchain nightly
 WORKDIR /usr/src/freebox-exporter-rs
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
-RUN cargo +nightly build --jobs 2 --release --target x86_64-unknown-linux-musl
+RUN cargo +nightly build --release --target x86_64-unknown-linux-musl
 
 # Builder pour arm64
 FROM rustlang/rust:nightly AS builder-arm64
@@ -42,7 +42,7 @@ WORKDIR /usr/src/freebox-exporter-rs
 COPY Cargo.toml Cargo.lock ./
 RUN cargo fetch
 COPY src ./src
-RUN cargo +nightly build --jobs 2 --release --target aarch64-unknown-linux-musl
+RUN cargo +nightly build --release --target aarch64-unknown-linux-musl
 
 # Builder pour armv7
 FROM --platform=linux/arm/v7 rustlang/rust:nightly AS builder-armv7
@@ -63,7 +63,7 @@ RUN rustup target add arm-unknown-linux-musleabihf
 WORKDIR /usr/src/freebox-exporter-rs
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
-RUN cargo +nightly build --jobs 2 --release --target arm-unknown-linux-musleabihf
+RUN cargo +nightly build --release --target arm-unknown-linux-musleabihf
 
 # Image finale pour amd64
 FROM alpine:latest AS final-amd64
