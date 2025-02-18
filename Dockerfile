@@ -1,4 +1,4 @@
-# Builder pour x86_64
+
 FROM --platform=linux/amd64 rustlang/rust:nightly AS builder-amd64
 RUN apt-get update && \
   apt-get install -y musl-tools musl-dev libssl-dev pkg-config && \
@@ -20,7 +20,6 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 RUN cargo +nightly build --release --target x86_64-unknown-linux-musl
 
-# Builder pour arm64
 FROM rustlang/rust:nightly AS builder-arm64
 RUN apt-get update && \
   apt-get install -y musl-tools musl-dev libssl-dev pkg-config && \
@@ -44,7 +43,6 @@ RUN cargo fetch
 COPY src ./src
 RUN cargo +nightly build --release --target aarch64-unknown-linux-musl
 
-# Builder pour armv7
 FROM --platform=linux/arm/v7 rustlang/rust:nightly AS builder-armv7
 RUN apt-get update && \
   apt-get install -y musl-tools musl-dev libssl-dev pkg-config && \
@@ -65,7 +63,6 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 RUN cargo +nightly build --release --target arm-unknown-linux-musleabihf
 
-# Image finale pour amd64
 FROM alpine:latest AS final-amd64
 RUN apk add --no-cache ca-certificates
 COPY --from=builder-amd64 /usr/src/freebox-exporter-rs/target/x86_64-unknown-linux-musl/release/freebox-exporter-rs /freebox-exporter-rs
@@ -73,7 +70,6 @@ COPY config.toml /etc/freebox-exporter-rs/config.toml
 EXPOSE 9102
 CMD ["/freebox-exporter-rs"]
 
-# Image finale pour arm64
 FROM alpine:latest AS final-arm64
 RUN apk add --no-cache ca-certificates
 COPY --from=builder-arm64 /usr/src/freebox-exporter-rs/target/aarch64-unknown-linux-musl/release/freebox-exporter-rs /freebox-exporter-rs
@@ -81,7 +77,6 @@ COPY config.toml /etc/freebox-exporter-rs/config.toml
 EXPOSE 9102
 CMD ["/freebox-exporter-rs"]
 
-# Image finale pour armv7
 FROM alpine:latest AS final-armv7
 RUN apk add --no-cache ca-certificates
 COPY --from=builder-armv7 /usr/src/freebox-exporter-rs/target/arm-unknown-linux-musleabihf/release/freebox-exporter-rs /freebox-exporter-rs

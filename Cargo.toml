@@ -7,23 +7,23 @@ edition = "2021"
 
 [dependencies]
 async-trait = { version = "0.1.84", default-features = false }
-chrono = { version = "0.4.39", default-features = false }
+chrono = "0.4.39"
 clap = { version = "4.5.29", default-features = false, features = ["derive", "std"] }
-flexi_logger = { version = "0.29.8", default-features = false, features = ["async", "specfile", "compress", "colors"] }
+flexi_logger = { version = "0.29.8", default-features = false, features = ["async", "specfile", "compress", "colors"]}
 hmac = { version = "0.12.1", default-features = false, features = ["std"] }
-lazy_static = { version = "1.5.0", default-features = false }
-log = { version = "0.4.22", default-features = false }
-prometheus_exporter = { version = "0.8.5", default-features = false }
-regex = { version = "1.11.1", default-features = false }
-reqwest = { version = "0.12.12", default-features = true, features = ["json"] }
-serde = { version = "1.0.217", default-features = false, features = ["derive"] }
-serde_json = { version = "1.0.134", default-features = false }
-sha1 = { version = "0.10.6", default-features = false }
-time = { version = "0.3.37", default-features = false }
-tokio = { version = "1.42.0", default-features = false, features = ["full"] }
-toml = { version = "0.8.20", default-features = false }
-mockall = { version = "0.13.1", default-features = false }
-hostname = { version = "0.4.0", default-features = false }
+lazy_static = "1.5.0"
+log = "0.4.22"
+prometheus_exporter = "0.8.5"
+regex = "1.11.1"
+reqwest = { version = "0.12.12", features = ["json"] }
+serde = {version = "1.0.217", default-features = false, features = ["derive"] }
+serde_json = "1.0.134"
+sha1 = "0.10.6"
+time = "0.3.37"
+tokio = { version = "1.42.0", default-features = false, features = ["full"]}
+toml = "0.8.20"
+mockall = "0.13.1"
+hostname = "0.4.0"
 openssl = { version = "0.10.68", default-features = false, features = ["vendored"] }
 
 [dev-dependencies]
