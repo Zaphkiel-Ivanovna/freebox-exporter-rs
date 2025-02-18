@@ -41,6 +41,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64 \
+            --build-arg TARGETARCH=amd64 \
             --push \
             --tag ghcr.io/${{ needs.build-and-push.outputs.repository }}:amd64 \
             .
@@ -68,6 +69,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/arm64 \
+            --build-arg TARGETARCH=arm64 \
             --push \
             --tag ghcr.io/${{ needs.build-and-push.outputs.repository }}:arm64 \
             .
@@ -95,6 +97,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/arm/v7 \
+            --build-arg TARGETARCH=arm \
             --push \
             --tag ghcr.io/${{ needs.build-and-push.outputs.repository }}:armv7 \
             .
